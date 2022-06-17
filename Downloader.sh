@@ -149,10 +149,13 @@ crawlerTask() {
 ###
 
 ###
-# Start parallel crawling instances -
+# Start parallel crawling instances
+num_jobs="\j" # The prompt escape for number of jobs currently running
 for song in "${songArray[@]}"
 do
-    ((i=i%processNumber)); ((i++==0)) && wait
+    while (( ${num_jobs@P} >= ${processNumber} )); do
+        wait -n
+    done
     crawlerTask "$song" &
 done
 ###
