@@ -4,6 +4,7 @@ csvFile=""
 downloader="youtube-dl"
 processNumber=5
 musicPath=""
+additionalKeywords=""
 
 ###
 # Set operation variables
@@ -24,7 +25,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [[ ! -d "$musicPath" ]]
+if [[ ! -z $musicPath ]] && [[ ! -d "$musicPath" ]]
 then
     echo "ERROR: Selected path does not exist: $musicPath"
     exit 1
@@ -104,22 +105,22 @@ crawlerTask() {
 
     ###
     # Get rid of possible old cache
-    if [[ -f "/tmp/${songTitle}.mp3" ]]; then
-        echo "Clearing cached file: /tmp/${songTitle}.mp3"
-        rm "/tmp/${songTitle}.mp3"
-    fi
+    clearCache() {
+        if [[ -f "/tmp/${songTitle}.mp3" ]]; then
+            rm "/tmp/${songTitle}.mp3"
+        fi
 
-    if [[ -f "/tmp/${songTitle}.jpg" ]]; then
-        echo "Clearing cached file: /tmp/${songTitle}.jpg"
-        rm "/tmp/${songTitle}.jpg"
-    fi
+        if [[ -f "/tmp/${songTitle}.jpg" ]]; then
+            rm "/tmp/${songTitle}.jpg"
+        fi
+    }
+    clearCache
     ###
 
     ###
     # Get cover and .mp3 file
-    echo "Downloading: ${songTitle}"
     curl -s $image > "/tmp/${songTitle}.jpg" &
-    $downloader -o "/tmp/${songTitle}.%(ext)s" "ytsearch1:${songTitle} ${artist}" -x --audio-format mp3 --audio-quality 0 --quiet &
+    $downloader -o "/tmp/${songTitle}.%(ext)s" "ytsearch1:${songTitle} ${artist} ${additionalKeywords}" -x --audio-format mp3 --audio-quality 0 --quiet &
     wait
     ###
 
@@ -135,28 +136,34 @@ crawlerTask() {
     -metadata track="$trackNumber" \
     -hide_banner \
     -loglevel error \
-    "${musicPath}/${songTitle}.mp3" -y
+    "${musicPath}${songTitle}.mp3" -y
     ###
 
     ###
     # Clear cached files
-    rm "/tmp/${songTitle}.jpg"
-    rm "/tmp/${songTitle}.mp3"
+    clearCache
     ###
 
     echo "Finished: ${songTitle}"
 }
 ###
+#
+startedSongs=0
+numJobs="\j" # Number of background jobs.
+###
 
 ###
 # Start parallel crawling instances
-num_jobs="\j" # The prompt escape for number of jobs currently running
 for song in "${songArray[@]}"
 do
-    while (( ${num_jobs@P} >= ${processNumber} )); do
+    while (( ${numJobs@P} >= ${processNumber} )); do
         wait -n
     done
+
     crawlerTask "$song" &
+
+    ((startedSongs++))
+    echo "Status: #${startedSongs} downloads started - $(awk "BEGIN {print ((${startedSongs}/${#songArray[@]})*100)}")%"
 done
 ###
 
