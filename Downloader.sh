@@ -94,7 +94,8 @@ crawlerTask() {
 
     ###
     # Assert values for this entry to variables
-    songTitle="$(echo ${colArray[$colNumTitle - 1]} | tr '_' ' ')"
+    # Special replacement for songTitle as it is used for paths
+    songTitle="$(echo ${colArray[$colNumTitle - 1]} | tr '_/\\' ' ')"
     artist="$(echo ${colArray[$colNumArtist - 1]} | tr '_' ' ')"
     image="$(echo ${colArray[$colNumImageURL - 1]} | tr '_' ' ')"
     albumName="$(echo ${colArray[$colNumAlbumName - 1]} | tr '_' ' ')"
@@ -146,8 +147,8 @@ crawlerTask() {
 
     echo "Finished: ${songTitle}"
 }
+
 ###
-#
 startedSongs=0
 numJobs="\j" # Number of background jobs.
 ###
