@@ -82,6 +82,7 @@ while read songLine
 do
     songArray+=("$songLine")
 done < <(tail -n +2 $csvFile)
+echo "Found: ${#songArray[@]} entries"
 ###
 
 ###
@@ -115,37 +116,45 @@ crawlerTask() {
             rm "/tmp/${songTitle}.jpg"
         fi
     }
+
     clearCache
     ###
 
     ###
-    # Get cover and .mp3 file
-    curl -s $image > "/tmp/${songTitle}.jpg" &
-    $downloader -o "/tmp/${songTitle}.%(ext)s" "ytsearch1:${songTitle} ${artist} ${additionalKeywords}" -x --audio-format mp3 --audio-quality 0 --quiet &
-    wait
-    ###
+    # Prevent download if file already exists
+    if [[ ! -f "${musicPath}${songTitle}.mp3" ]]; then
+        ###
+        # Get cover and .mp3 file
+        curl -s $image > "/tmp/${songTitle}.jpg" &
+        $downloader -o "/tmp/${songTitle}.%(ext)s" "ytsearch1:${songTitle} ${artist} ${additionalKeywords}" -x --audio-format mp3 --audio-quality 0 --quiet &
+        wait
+        ###
 
-    ###
-    # Merge cover, metadata and .mp3 file
-    ffmpeg -i "/tmp/${songTitle}.mp3" -i "/tmp/$songTitle.jpg" \
-    -map 0:0 -map 1:0 -codec copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" \
-    -metadata artist="$artist" \
-    -metadata title="$songTitle" \
-    -metadata album="$albumName" \
-    -metadata album_artist="$albumArtistsName" \
-    -metadata disc="$discNumber" \
-    -metadata track="$trackNumber" \
-    -hide_banner \
-    -loglevel error \
-    "${musicPath}${songTitle}.mp3" -y
-    ###
+        ###
+        # Merge cover, metadata and .mp3 file
+        ffmpeg -i "/tmp/${songTitle}.mp3" -i "/tmp/$songTitle.jpg" \
+        -map 0:0 -map 1:0 -codec copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" \
+        -metadata artist="$artist" \
+        -metadata title="$songTitle" \
+        -metadata album="$albumName" \
+        -metadata album_artist="$albumArtistsName" \
+        -metadata disc="$discNumber" \
+        -metadata track="$trackNumber" \
+        -hide_banner \
+        -loglevel error \
+        "${musicPath}${songTitle}.mp3" -y
+        ###
 
-    ###
-    # Clear cached files
-    clearCache
-    ###
+        ###
+        # Clear cached files
+        clearCache
+        ###
 
-    echo "Finished: ${songTitle}"
+        echo "Finished: ${songTitle}"
+    else
+        echo "Skipping: ${songTitle}.mp3 - (File already exists in: ${musicPath})"
+    fi
+    ###
 }
 
 ###
