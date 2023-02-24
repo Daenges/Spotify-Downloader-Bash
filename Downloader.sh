@@ -1,28 +1,26 @@
 #!/bin/bash
 
 csvFile=""
-downloader="yt-dlp"
+downloader=""
 processNumber=5
-musicPath=""
+musicPath="./"
 additionalKeywords=""
 
 ###
 # Set operation variables
 if [ -z $1 ]; then
-    echo "ERROR: No .csv file provided."
+    echo "ERROR: No .csv file provided. Obtain one here: https://watsonbox.github.io/exportify/"
     exit 1
 else
     csvFile=$1
 fi
 
 while [ $# -gt 0 ]; do
-
    if [[ $1 == *"--"* ]]; then
         param="${1/--/}"
         declare $param="$2"
    fi
-
-  shift
+   shift
 done
 
 if [[ ! -z $musicPath ]] && [[ ! -d "$musicPath" ]]
@@ -33,16 +31,25 @@ fi
 ###
 
 ###
-# Check if downloader and ffmpeg are present
-if ! command -v $downloader &> /dev/null
+# Detect downloader and FFMPEG
+if [[ -z "$downloader" ]]
 then
-    echo "ERROR: Downloader could not be found: ${downloader}"
-    exit 1
+    if command -v yt-dlp &> /dev/null
+    then
+        downloader="yt-dlp"
+    elif command -v youtube-dl &> /dev/null
+    then
+        downloader="youtube-dl"
+    else
+        echo "No downloader provided or detected. Install 'yt-dlp' or 'youtube-dl'."
+        exit 1
+    fi
 fi
+echo "Using '$downloader' as downloader."
 
 if ! command -v "ffmpeg" &> /dev/null
 then
-    echo "ERROR: FFMPEG not found"
+    echo "ERROR: FFMPEG could not be found. Install 'FFMPEG'."
     exit 1
 fi
 ###
@@ -58,17 +65,17 @@ colNameDiscNum="Disc Number"
 colNameTrackNumber="Track Number"
 ###
 
-csvHeadder=$(head -1 $csvFile | tr ',' '\n' | nl)
+csvHeader=$(head -1 $csvFile | tr ',' '\n' | nl)
 
 ###
 # Evaluate the coresponding column number for each name
-colNumTitle=$(echo "$csvHeadder" | grep -w "$colNameTitle" | tr -d " " | awk -F " " '{print $1}')
-colNumArtist=$(echo "$csvHeadder" | grep -w "$colNameArtist" | tr -d " " | awk -F " " '{print $1}' | head -1)
-colNumImageURL=$(echo "$csvHeadder" | grep -w "$colNameImageURL" | tr -d " " | awk -F " " '{print $1}')
-colNumAlbumName=$(echo "$csvHeadder"  | grep -w "$colNameAlbumName" | tr -d " " | awk -F " " '{print $1}')
-colNumAlbumArtistName=$(echo "$csvHeadder" | grep -w "$colNameAlbumArtistName" | tr -d " " | awk -F " " '{print $1}')
-colNumDiscNumber=$(echo "$csvHeadder" | grep -w "$colNameDiscNum" | tr -d " " | awk -F " " '{print $1}')
-colNumTrack=$(echo "$csvHeadder" | grep -w "$colNameTrackNumber" | tr -d " " | awk -F " " '{print $1}')
+colNumTitle=$(echo "$csvHeader" | grep -w "$colNameTitle" | tr -d " " | awk -F " " '{print $1}')
+colNumArtist=$(echo "$csvHeader" | grep -w "$colNameArtist" | tr -d " " | awk -F " " '{print $1}' | head -1)
+colNumImageURL=$(echo "$csvHeader" | grep -w "$colNameImageURL" | tr -d " " | awk -F " " '{print $1}')
+colNumAlbumName=$(echo "$csvHeader"  | grep -w "$colNameAlbumName" | tr -d " " | awk -F " " '{print $1}')
+colNumAlbumArtistName=$(echo "$csvHeader" | grep -w "$colNameAlbumArtistName" | tr -d " " | awk -F " " '{print $1}')
+colNumDiscNumber=$(echo "$csvHeader" | grep -w "$colNameDiscNum" | tr -d " " | awk -F " " '{print $1}')
+colNumTrack=$(echo "$csvHeader" | grep -w "$colNameTrackNumber" | tr -d " " | awk -F " " '{print $1}')
 ###
 
 ###
@@ -97,7 +104,7 @@ crawlerTask() {
     # Assert values for this entry to variables
     # Special replacement for songTitle as it is used for paths
     songTitle="$(echo ${colArray[$colNumTitle - 1]} | tr '_/\\' ' ')"
-    artist="$(echo ${colArray[$colNumArtist - 1]} | tr '_' ' ')"
+    artist="$(echo ${colArray[$colNumArtist - 1]} | tr '_' ' ' | cut -f1 -d',')"
     image="$(echo ${colArray[$colNumImageURL - 1]} | tr '_' ' ')"
     albumName="$(echo ${colArray[$colNumAlbumName - 1]} | tr '_' ' ')"
     albumArtistsName="$(echo ${colArray[$colNumAlbumArtistName - 1]} | tr '_' ' ')"
@@ -135,10 +142,10 @@ crawlerTask() {
         ffmpeg -i "/tmp/${songTitle}.mp3" -i "/tmp/$songTitle.jpg" \
         -map 0:0 -map 1:0 -codec copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" \
         -metadata artist="$artist" \
-        -metadata title="$songTitle" \
         -metadata album="$albumName" \
         -metadata album_artist="$albumArtistsName" \
         -metadata disc="$discNumber" \
+        -metadata title="$songTitle" \
         -metadata track="$trackNumber" \
         -hide_banner \
         -loglevel error \
@@ -175,6 +182,9 @@ do
     ((startedSongs++))
     echo "Status: #${startedSongs} downloads started - $(awk "BEGIN {print ((${startedSongs}/${#songArray[@]})*100)}")%"
 done
+
+echo "All downloads have been started. Waiting for completion."
+wait $(jobs -p)
 ###
 
 exit 0
