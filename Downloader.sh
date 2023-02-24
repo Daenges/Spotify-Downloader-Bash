@@ -1,7 +1,7 @@
 #!/bin/bash
 
 csvFile=""
-downloader="youtube-dl"
+downloader="yt-dlp"
 processNumber=5
 musicPath=""
 additionalKeywords=""
