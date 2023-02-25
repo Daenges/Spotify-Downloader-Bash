@@ -2,9 +2,6 @@
 
 An automation script to download **Spotify exported** songs using `yt-dlp` / `youtube-dl` and `FFMPEG`.
 
-## :page_with_curl: Legal Notice
-Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`.<br>All laws regarding the download of copyrighted content also apply here.
-
 ---
 
 ## :pencil2: Key Features
@@ -14,7 +11,8 @@ Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`
 :heavy_check_mark: **No additional overhead**<br>
 :heavy_check_mark: **No need to deal with the Spotify API**<br>
 
-&nbsp;
+## :page_with_curl: Legal Notice
+Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`.<br>All laws regarding the download of copyrighted content also apply here.
 
 ## :clipboard: Script Setup
 
@@ -27,7 +25,6 @@ chmod +x Downloader.sh
 ```
 4. Check the script one last time with your favourite editor before execution.
 
-&nbsp;
 
 ## :arrow_forward: Script Execution
 :arrow_right_hook: `./Downloader.sh "Path/To/YourPlaylist.csv"` starts the script with default parameters.
@@ -60,12 +57,12 @@ If you got any error, **check the version of your downloader against their lates
 Most errors arise through Youtube updating their page which needs to be implemented into the downloaders.
 If you have a recent downloader version and still get errors, feel free to create an issue here.
 
-<br>
 
 ## :mag_right: What is the script doing in the background?
 1. Reading all parameters
-2. Getting the column number for the according data fields (`Artist Name`, `Track Name`, ...)
-3. Creating an array containing all lines of data
+2. Getting the column number for the according data fields (`Artist Name`, `Track Name`, ...)3. Creating an array containing all lines of data
 4. Starting parallel jobs that handle the download process
     - download picture and `.mp3` into `/temp/`
     - merge them with `FFMPEG` while also applying metadata
+
+
