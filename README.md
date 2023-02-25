@@ -1,4 +1,5 @@
-# Spotify-Downloader-Bash
+![TitleImage](https://user-images.githubusercontent.com/57369924/221327179-e60f6e56-28a8-4405-8a37-a38e2ad7d194.jpg)
+
 An automation script to download **Spotify exported** songs using `yt-dlp` / `youtube-dl` and `FFMPEG`.
 
 ---
