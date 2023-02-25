@@ -2,6 +2,9 @@
 
 An automation script to download **Spotify exported** songs using `yt-dlp` / `youtube-dl` and `FFMPEG`.
 
+## :page_with_curl: Legal Notice
+Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`.<br>All laws regarding the download of copyrighted content also apply here.
+
 ---
 
 ## :pencil2: Key Features
