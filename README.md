@@ -16,7 +16,7 @@ Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`
 
 ## :clipboard: Script Setup
 
-1. Visit &nbsp;<a href="https://watsonbox.github.io/exportify/"><img style="height: 1em;" src="https://watsonbox.github.io/exportify/favicon.png"> <b>Exportify</b></a>, **sign in with your Spotify credentials** and **export** your desired playlists as a `.csv` file.
+1. Visit &nbsp;<a href="https://watsonbox.github.io/exportify/"><img style="height: 20px; width: 20px;" src="https://watsonbox.github.io/exportify/favicon.png"> <b>Exportify</b></a>, **sign in with your Spotify credentials** and **export** your desired playlists as a `.csv` file.
 2. Install a **downloader** (`yt-dlp` or `youtube-dl` &rarr; **Check for a recent version!** ) and `FFMPEG` with your prefered package manager.
 3. **Get the script** and **make it executable**:
 ```sh
@@ -60,7 +60,8 @@ If you have a recent downloader version and still get errors, feel free to creat
 
 ## :mag_right: What is the script doing in the background?
 1. Reading all parameters
-2. Getting the column number for the according data fields (`Artist Name`, `Track Name`, ...)3. Creating an array containing all lines of data
+2. Getting the column number for the according data fields (`Artist Name`, `Track Name`, ...)
+3. Creating an array containing all lines of data
 4. Starting parallel jobs that handle the download process
     - download picture and `.mp3` into `/temp/`
     - merge them with `FFMPEG` while also applying metadata
