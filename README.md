@@ -48,7 +48,7 @@ additionalKeywords=""
 |`csvFile`|Must be entered as first parameter on execution and sets the path of your playlist file.|
 |`downloader`|Sets the download command.<br>There is an automatic detection *(prefering `yt-dlp`)*, that **can be overwritten with:** `--downloader youtube-dl`|
 |`processNumber`|Number of parallel started Downloadprocesses.<br>**Can be altered with:** `--processNumber 10`|
-|`musicPath`|Sets the path where the music is saved, default is the execution path of the script.<br>**Can be changed with:** `--musicPath /Your/New/Path`|
+|`musicPath`|Sets the path where the music is saved, default is the execution path of the script.<br>**Can be changed with:** `--musicPath /Your/New/Path/`|
 |`additionalKeywords`|Since we are performing Youtube searches with `Title` and `Author`, some additional keywords<br>(e.g. `clean`, `lyrics`, ...) might improve the results.<br>**Can be set with:** `--additionalKeywords clean`|
 <br>
 
