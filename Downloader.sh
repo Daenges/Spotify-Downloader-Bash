@@ -133,7 +133,7 @@ crawlerTask() {
         ###
         # Get cover and .mp3 file
         curl -s $image > "/tmp/${songTitle}.jpg" &
-        $downloader -o "/tmp/${songTitle}.%(ext)s" "ytsearch1:${songTitle} ${artist} ${additionalKeywords}" -x --audio-format mp3 --audio-quality 0 --quiet &
+        $downloader -o "/tmp/${songTitle}.%(ext)s" $(echo "https://music.youtube.com/search?q=${songTitle}+${artist}+${additionalKeywords}#Songs" | tr " " "+") -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
         wait
         ###
 
