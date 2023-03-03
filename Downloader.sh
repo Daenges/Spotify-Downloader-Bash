@@ -79,6 +79,40 @@ colNumTrack=$(echo "$csvHeader" | grep -w "$colNameTrackNumber" | tr -d " " | aw
 ###
 
 ###
+# Declare functions
+
+# Escape special characters for urls: https://gist.github.com/cdown/1163649
+urlencode() {
+    # urlencode <string>
+
+    old_lc_collate=$LC_COLLATE
+    LC_COLLATE=C
+
+    local length="${#1}"
+    for (( i = 0; i < length; i++ )); do
+        local c="${1:$i:1}"
+        case $c in
+            [a-zA-Z0-9.~_-]) printf '%s' "$c" ;;
+            *) printf '%%%02X' "'$c" ;;
+        esac
+    done
+
+    LC_COLLATE=$old_lc_collate
+}
+
+# Get rid of possible old cache
+clearCache() {
+    if [[ -f "/tmp/$1.mp3" ]]; then
+        rm "/tmp/$1.mp3"
+    fi
+
+    if [[ -f "/tmp/$1.jpg" ]]; then
+        rm "/tmp/$1.jpg"
+    fi
+}
+###
+
+###
 # Save all lines in array
 songArray=()
 ###
@@ -112,28 +146,20 @@ crawlerTask() {
     trackNumber="$(echo ${colArray[$colNumTrack - 1]}| tr '_' ' ')"
     ###
 
-    ###
-    # Get rid of possible old cache
-    clearCache() {
-        if [[ -f "/tmp/${songTitle}.mp3" ]]; then
-            rm "/tmp/${songTitle}.mp3"
-        fi
-
-        if [[ -f "/tmp/${songTitle}.jpg" ]]; then
-            rm "/tmp/${songTitle}.jpg"
-        fi
-    }
-
-    clearCache
-    ###
+    # Remove possible old cache
+    clearCache "$songTitle"
 
     ###
     # Prevent download if file already exists
     if [[ ! -f "${musicPath}${songTitle}.mp3" ]]; then
+
+        # HTML escape all data
+        songURL="https://music.youtube.com/search?q=$(urlencode "$songTitle")+$(urlencode "$artist")+$(urlencode "$additionalKeywords")#Songs"
+
         ###
         # Get cover and .mp3 file
         curl -s $image > "/tmp/${songTitle}.jpg" &
-        $downloader -o "/tmp/${songTitle}.%(ext)s" $(echo "https://music.youtube.com/search?q=${songTitle}+${artist}+${additionalKeywords}#Songs" | tr " " "+") -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
+        $downloader -o "/tmp/${songTitle}.%(ext)s" $songURL -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
         wait
         ###
 
@@ -154,7 +180,7 @@ crawlerTask() {
 
         ###
         # Clear cached files
-        clearCache
+        clearCache "$songTitle"
         ###
 
         echo "Finished: ${songTitle}"
