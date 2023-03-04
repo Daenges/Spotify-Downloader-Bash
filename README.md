@@ -50,7 +50,6 @@ additionalKeywords=""
 |`processNumber`|Number of parallel started Downloadprocesses.<br>**Can be altered with:** `--processNumber 10`|
 |`musicPath`|Sets the path where the music is saved, default is the execution path of the script.<br>**Can be changed with:** `--musicPath /Your/New/Path/`|
 |`additionalKeywords`|Since we are performing Youtube searches with `Title` and `Author`, some additional keywords<br>(e.g. `clean`, `lyrics`, ...) might improve the results.<br>**Can be set with:** `--additionalKeywords clean`|
-<br>
 
 ## :x: Errors
 If you got any error, **check the version of your downloader against their latest release** (**[yt-dlp](https://github.com/yt-dlp/yt-dlp/releases)** or **[youtube-dl](https://github.com/ytdl-org/youtube-dl/releases)**).
@@ -65,5 +64,21 @@ If you have a recent downloader version and still get errors, feel free to creat
 4. Starting parallel jobs that handle the download process
     - download picture and `.mp3` into `/temp/`
     - merge them with `FFMPEG` while also applying metadata
+ 
+ 
+## :scroll: License
+```
+Copyright 2023 Daenges
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```
