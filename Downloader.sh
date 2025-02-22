@@ -233,14 +233,14 @@ crawlerTask() {
             --disc-num "${discNumber}" \
             --track "${trackNumber}" \
             --add-popularity "support@spotify.com:${popularityScore}" \
-            "/tmp/${songTitle}.mp3" # &> /dev/null
+            "/tmp/${songTitle}.mp3" &> /dev/null
 
             if [[ -f "/tmp/${songTitle}.lrc" ]]; then
-                eyeD3 --v2 --add-lyrics "/tmp/${songTitle}.lrc" "/tmp/${songTitle}.mp3" # &> /dev/null
+                eyeD3 --v2 --add-lyrics "/tmp/${songTitle}.lrc" "/tmp/${songTitle}.mp3" &> /dev/null
             fi
 
             if [[ -f "/tmp/${songTitle}.jpg" ]]; then
-                eyeD3 --v2 --add-image "/tmp/${songTitle}.jpg:FRONT_COVER" "/tmp/${songTitle}.mp3" # &> /dev/null
+                eyeD3 --v2 --add-image "/tmp/${songTitle}.jpg:FRONT_COVER" "/tmp/${songTitle}.mp3" &> /dev/null
             fi
 
             mv "/tmp/${songTitle}.mp3" "${musicPath}${songTitle}.mp3"
