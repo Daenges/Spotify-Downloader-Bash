@@ -66,6 +66,7 @@ colNameTrackNumber="Track Number"
 colNamePopularity="Popularity"
 colNameAlbumReleaseDate="Album Release Date"
 colNameDuration="Track Duration (ms)"
+colNameISRC="ISRC"
 ###
 
 csvHeader=$(head -1 "$csvFile" | tr ',' '\n' | nl)
@@ -82,6 +83,7 @@ colNumDiscNumber=$(echo "$csvHeader" | grep -w "$colNameDiscNum" | tr -d " " | a
 colNumTrack=$(echo "$csvHeader" | grep -w "$colNameTrackNumber" | tr -d " " | awk -F " " '{print $1}')
 colNumDuration=$(echo "$csvHeader" | grep -w "$colNameDuration" | tr -d " " | awk -F " " '{print $1}')
 colNumPopularity=$(echo "$csvHeader" | grep -w "$colNamePopularity" | tr -d " " | awk -F " " '{print $1}')
+colNumISRC=$(echo "$csvHeader" | grep -w "$colNameISRC" | tr -d " " | awk -F " " '{print $1}')
 ###
 
 ###
@@ -122,9 +124,13 @@ downloadLrc() {
             echo "$synced_lyrics" > "/tmp/${track_name}.lrc"
         else
             plain_lyrics=$(jq -r '.plainLyrics' <<< "$response_body")
-            echo "$plain_lyrics" > "/tmp/${track_name}.lrc"
+            echo "$plain_lyrics" > "/tmp/${track_name}.txt"
         fi
     fi
+}
+
+escapeQuotes() {
+    printf '%s' "$1" | sed "s/['\"\\\\]/\\\\&/g"
 }
 
 # Escape special characters for urls: https://gist.github.com/cdown/1163649
@@ -187,16 +193,17 @@ crawlerTask() {
     ###
     # Assert values for this entry to variables
     # Special replacement for songTitle as it is used for paths
-    songTitle="$(echo "${colArray[$colNumTitle - 1]}" | tr '_/\\' ' ')"
-    artist="$(echo "${colArray[$colNumArtist - 1]}" | tr '_' ' ' | cut -f1 -d',')"
-    albumName="$(echo "${colArray[$colNumAlbumName - 1]}" | tr '_' ' ')"
-    albumArtistsName="$(echo "${colArray[$colNumAlbumArtistName - 1]}" | tr '_' ' ')"
+    songTitle="$(escapeQuotes "$(echo "${colArray[$colNumTitle - 1]}" | tr '_/\\' ' ')")"
+    artist="$(escapeQuotes "$(echo "${colArray[$colNumArtist - 1]}" | tr '_' ' ' | cut -f1 -d',')")"
+    albumName="$(escapeQuotes "$(echo "${colArray[$colNumAlbumName - 1]}" | tr '_' ' ')")"
+    albumArtistsName="$(escapeQuotes "$(echo "${colArray[$colNumAlbumArtistName - 1]}" | tr '_' ' ')")"
     albumReleaseDate="$(echo "${colArray[$colNumAlbumReleaseDate - 1]}" | tr '_' ' ')"
     image="$(echo "${colArray[$colNumImageURL - 1]}" | tr '_' ' ')"
     discNumber="$(echo "${colArray[$colNumDiscNumber - 1]}" | tr '_' ' ')"
     trackNumber="$(echo "${colArray[$colNumTrack - 1]}" | tr '_' ' ')"
     trackDuration="$(echo "${colArray[$colNumDuration - 1]}" | tr '_' ' ')"
     popularityScore="$(echo "${colArray[$colNumPopularity - 1]}" | tr '_' ' ')"
+    isrc="$(echo "${colArray[$colNumISRC - 1]}" | tr '_' ' ')"
     ###
 
     # Remove possible old cache
@@ -217,30 +224,36 @@ crawlerTask() {
         ###
 
         ### Imbed Metadata
-        if command -v eyeD3 &> /dev/null && command -v jq &> /dev/null; then
+        if command -v kid3-cli &> /dev/null && command -v jq &> /dev/null; then
             # Get the Lyrics from https://lrclib.net/
             downloadLrc "${songTitle}" \
                         "${albumArtistsName}" \
                         "${albumName}" \
                         "${trackDuration}"
+            
+            kid3-cli \
+            -c "set title '$songTitle'" \
+            -c "set artist '$artist'" \
+            -c "set albumartist '$albumArtistsName'" \
+            -c "set album '$albumName'" \
+            -c "set date '$albumReleaseDate'" \
+            -c "set discnumber '$discNumber'" \
+            -c "set tracknumber '$trackNumber'" \
+            -c "set rating $((popularityScore * 255 / 100))" \
+            -c "set isrc '$isrc'" \
+            "/tmp/${songTitle}.mp3"
 
-            # Use eyeD3
-            eyeD3 --v2 \
-            --title "${songTitle}" \
-            --artist "${albumArtistsName}" \
-            --album "${albumName}" \
-            --release-date "${albumReleaseDate}" \
-            --disc-num "${discNumber}" \
-            --track "${trackNumber}" \
-            --add-popularity "support@spotify.com:${popularityScore}" \
-            "/tmp/${songTitle}.mp3" &> /dev/null
-
+            # SYLT Tag implementation is a dumpsterfire...
             if [[ -f "/tmp/${songTitle}.lrc" ]]; then
-                eyeD3 --v2 --add-lyrics "/tmp/${songTitle}.lrc" "/tmp/${songTitle}.mp3" &> /dev/null
+                kid3-cli -c "set SYLT:'/tmp/${songTitle}.lrc' ''" -c "set USLT:'/tmp/${songTitle}.lrc' ''" "/tmp/${songTitle}.mp3"
+            fi
+
+            if [[ -f "/tmp/${songTitle}.txt" ]]; then
+                kid3-cli -c "set USLT:'/tmp/${songTitle}.txt' ''" "/tmp/${songTitle}.mp3"
             fi
 
             if [[ -f "/tmp/${songTitle}.jpg" ]]; then
-                eyeD3 --v2 --add-image "/tmp/${songTitle}.jpg:FRONT_COVER" "/tmp/${songTitle}.mp3" &> /dev/null
+                kid3-cli -c "set picture:'/tmp/${songTitle}.jpg' '1'" "/tmp/${songTitle}.mp3"
             fi
 
             mv "/tmp/${songTitle}.mp3" "${musicPath}${songTitle}.mp3"
