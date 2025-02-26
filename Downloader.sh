@@ -96,6 +96,7 @@ downloadLrc() {
     artist_name="$2"
     album_name="$3"
     duration_ms="$4"
+    file_base_name="$5"
 
     # Convert duration from milliseconds to seconds (integer division)
     duration=$((duration_ms / 1000))
@@ -121,10 +122,10 @@ downloadLrc() {
 
         # If synced lyrics exist, output them; otherwise, fallback to plain lyrics
         if [[ -n "$synced_lyrics" ]]; then
-            echo "$synced_lyrics" > "/tmp/${track_name}.lrc"
+            echo "$synced_lyrics" > "${file_base_name}.lrc"
         else
             plain_lyrics=$(jq -r '.plainLyrics' <<< "$response_body")
-            echo "$plain_lyrics" > "/tmp/${track_name}.txt"
+            echo "$plain_lyrics" > "${file_base_name}.txt"
         fi
     fi
 }
@@ -151,22 +152,6 @@ urlencode() {
 
     LC_COLLATE=$old_lc_collate
 }
-
-# Get rid of possible old cache
-clearCache() {
-    if [[ -f "/tmp/$1.mp3" ]]; then
-        rm "/tmp/$1.mp3"
-    fi
-
-    if [[ -f "/tmp/$1.jpg" ]]; then
-        rm "/tmp/$1.jpg"
-    fi
-
-    if [[ -f "/tmp/$1.lrc" ]]; then
-        rm "/tmp/$1.lrc"
-    fi
-}
-###
 
 ###
 # Save all lines in array
@@ -206,20 +191,21 @@ crawlerTask() {
     isrc="$(echo "${colArray[$colNumISRC - 1]}" | tr '_' ' ')"
     ###
 
-    # Remove possible old cache
-    clearCache "$songTitle"
+
+    tempDir="$(mktemp -d)"
+    fileBaseName="${tempDir}/${songTitle} - ${artist}"
 
     ###
     # Prevent download if file already exists
-    if [[ ! -f "${musicPath}${songTitle}.mp3" ]]; then
+    if [[ ! -f "${musicPath}${songTitle} - ${artist}.mp3" ]]; then
 
         # HTML escape all data
         songURL="https://music.youtube.com/search?q=$(urlencode "$songTitle")+$(urlencode "$artist")+$(urlencode "$additionalKeywords")#Songs"
 
         ###
         # Get cover and .mp3 file
-        curl -s "$image" > "/tmp/${songTitle}.jpg" &
-        $downloader -o "/tmp/${songTitle}.%(ext)s" "$songURL" -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
+        curl -s "$image" > "${fileBaseName}.jpg" &
+        $downloader -o "${fileBaseName}.%(ext)s" "$songURL" -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
         wait
         ###
 
@@ -227,9 +213,10 @@ crawlerTask() {
         if command -v kid3-cli &> /dev/null && command -v jq &> /dev/null; then
             # Get the Lyrics from https://lrclib.net/
             downloadLrc "${songTitle}" \
-                        "${albumArtistsName}" \
+                        "${artist}" \
                         "${albumName}" \
-                        "${trackDuration}"
+                        "${trackDuration}" \
+                        "${fileBaseName}"
             
             kid3-cli \
             -c "set title '$songTitle'" \
@@ -241,26 +228,26 @@ crawlerTask() {
             -c "set tracknumber '$trackNumber'" \
             -c "set rating $((popularityScore * 255 / 100))" \
             -c "set isrc '$isrc'" \
-            "/tmp/${songTitle}.mp3"
+            "${fileBaseName}.mp3"
 
             # SYLT Tag implementation is a dumpsterfire...
-            if [[ -f "/tmp/${songTitle}.lrc" ]]; then
-                kid3-cli -c "set SYLT:'/tmp/${songTitle}.lrc' ''" -c "set USLT:'/tmp/${songTitle}.lrc' ''" "/tmp/${songTitle}.mp3"
+            if [[ -f "${fileBaseName}.lrc" ]]; then
+                kid3-cli -c "set SYLT:'${fileBaseName}.lrc' ''" -c "set USLT:'${fileBaseName}.lrc' ''" "${fileBaseName}.mp3"
             fi
 
-            if [[ -f "/tmp/${songTitle}.txt" ]]; then
-                kid3-cli -c "set USLT:'/tmp/${songTitle}.txt' ''" "/tmp/${songTitle}.mp3"
+            if [[ -f "${fileBaseName}.txt" ]]; then
+                kid3-cli -c "set USLT:'${fileBaseName}.txt' ''" "${fileBaseName}.mp3"
             fi
 
-            if [[ -f "/tmp/${songTitle}.jpg" ]]; then
-                kid3-cli -c "set picture:'/tmp/${songTitle}.jpg' '1'" "/tmp/${songTitle}.mp3"
+            if [[ -f "${fileBaseName}.jpg" ]]; then
+                kid3-cli -c "set picture:'${fileBaseName}.jpg' '1'" "${fileBaseName}.mp3"
             fi
 
-            mv "/tmp/${songTitle}.mp3" "${musicPath}${songTitle}.mp3"
+            mv "${fileBaseName}.mp3" "${musicPath}${songTitle} - ${artist}.mp3"
         else
             ###
             # Merge cover, metadata and .mp3 file
-            ffmpeg -i "/tmp/${songTitle}.mp3" -i "/tmp/$songTitle.jpg" \
+            ffmpeg -i "${fileBaseName}.mp3" -i "/${tempDir}/$songTitle.jpg" \
             -map 0:0 -map 1:0 -codec copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" \
             -metadata artist="$artist" \
             -metadata album="$albumName" \
@@ -270,13 +257,13 @@ crawlerTask() {
             -metadata track="$trackNumber" \
             -hide_banner \
             -loglevel error \
-            "${musicPath}${songTitle}.mp3" -y
+            "${musicPath}${songTitle} - ${artist}.mp3" -y
             ###
         fi
 
         ###
         # Clear cached files
-        clearCache "$songTitle"
+        rm -rf "$tempDir"
         ###
 
         echo "Finished: ${songTitle}"
