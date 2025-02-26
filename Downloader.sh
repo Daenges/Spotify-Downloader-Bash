@@ -131,7 +131,7 @@ downloadLrc() {
 }
 
 escapeQuotes() {
-    printf '%s' "$1" | sed "s/['\"\\\\]/\\\\&/g"
+    printf '%s' "$1" | sed "s/[\'\"]//g"
 }
 
 # Escape special characters for urls: https://gist.github.com/cdown/1163649
