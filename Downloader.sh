@@ -191,13 +191,12 @@ crawlerTask() {
     isrc="$(echo "${colArray[$colNumISRC - 1]}" | tr '_' ' ')"
     ###
 
-
-    tempDir="$(mktemp -d)"
-    fileBaseName="${tempDir}/${songTitle} - ${artist}"
-
     ###
     # Prevent download if file already exists
-    if [[ ! -f "${musicPath}${songTitle} - ${artist}.mp3" ]]; then
+    if [[ ! -f "${musicPath}/${songTitle} - ${artist}.mp3" ]]; then
+
+        tempDir="$(mktemp -d)"
+        fileBaseName="${tempDir}/${songTitle} - ${artist}" 
 
         # HTML escape all data
         songURL="https://music.youtube.com/search?q=$(urlencode "$songTitle")+$(urlencode "$artist")+$(urlencode "$additionalKeywords")#Songs"
@@ -243,7 +242,7 @@ crawlerTask() {
                 kid3-cli -c "set picture:'${fileBaseName}.jpg' '1'" "${fileBaseName}.mp3"
             fi
 
-            mv "${fileBaseName}.mp3" "${musicPath}${songTitle} - ${artist}.mp3"
+            mv "${fileBaseName}.mp3" "${musicPath}/${songTitle} - ${artist}.mp3"
         else
             ###
             # Merge cover, metadata and .mp3 file
@@ -257,13 +256,13 @@ crawlerTask() {
             -metadata track="$trackNumber" \
             -hide_banner \
             -loglevel error \
-            "${musicPath}${songTitle} - ${artist}.mp3" -y
+            "${musicPath}/${songTitle} - ${artist}.mp3" -y
             ###
         fi
 
         ###
         # Clear cached files
-        rm -rf "$tempDir"
+        rm -rf -- "$tempDir"
         ###
 
         echo "Finished: ${songTitle}"
