@@ -8,6 +8,7 @@ An automation script to download **Spotify exported** songs using `yt-dlp` / `yo
 :heavy_check_mark: **Customizable**<br>
 :heavy_check_mark: **Parallel downloads**<br>
 :heavy_check_mark: **Full metadata handling**<br>
+:heavy_check_mark: **Imbedded (synchronized) Lyrics**<br>
 :heavy_check_mark: **No additional overhead**<br>
 :heavy_check_mark: **No need to deal with the Spotify API**<br>
 
@@ -17,13 +18,14 @@ Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`
 ## :clipboard: Script Setup
 
 1. Visit &nbsp;<a href="https://watsonbox.github.io/exportify/"><img style="height: 20px; width: 20px;" src="https://watsonbox.github.io/exportify/favicon.png"> <b>Exportify</b></a>, **sign in with your Spotify credentials** and **export** your desired playlists as a `.csv` file.
-2. Install a **downloader** (`yt-dlp` or `youtube-dl` &rarr; **Check for a recent version!** ) and `FFMPEG` with your prefered package manager.
-3. **Get the script** and **make it executable**:
+2. Install a **downloader** (`yt-dlp` or `youtube-dl` &rarr; **Check for a recent version!** ) and `FFMPEG` with your prefered package manager. Further tools required that **might not be installed**: `curl`, `mktemp`.
+3. **Optional:** Also install `jq` and `kid3-cli` to imbed lyrics.
+4. **Get the script** and **make it executable**:
 ```sh
 wget https://raw.githubusercontent.com/Daenges/Spotify-Downloader-Bash/main/Downloader.sh &&\
 chmod +x Downloader.sh
 ```
-4. Check the script one last time with your favourite editor before execution.
+5. Check the script one last time with your favourite editor before execution.
 
 
 ## :arrow_forward: Script Execution
@@ -48,8 +50,8 @@ additionalKeywords=""
 |`csvFile`|Must be entered as first parameter on execution and sets the path of your playlist file.|
 |`downloader`|Sets the download command.<br>There is an automatic detection *(prefering `yt-dlp`)*, that **can be overwritten with:** `--downloader youtube-dl`|
 |`processNumber`|Number of parallel started Downloadprocesses.<br>**Can be altered with:** `--processNumber 10`|
-|`musicPath`|Sets the path where the music is saved, default is the execution path of the script.<br>**Can be changed with:** `--musicPath /Your/New/Path/`|
-|`additionalKeywords`|Since we are performing Youtube searches with `Title` and `Author`, some additional keywords<br>(e.g. `clean`, `lyrics`, ...) might improve the results.<br>**Can be set with:** `--additionalKeywords clean`|
+|`musicPath`|Sets the path where the music is saved, default is the execution path of the script.<br>**Can be changed with:** `--musicPath /Your/New/Path`|
+|`additionalKeywords`|Since we are performing Youtube Music searches with `Title` and `Author`, some additional keywords<br>(e.g. `clean`, `lyrics`, ...) might improve the results.<br>**Can be set with:** `--additionalKeywords clean`|
 
 ## :x: Errors
 If you got any error, **check the version of your downloader against their latest release** (**[yt-dlp](https://github.com/yt-dlp/yt-dlp/releases)** or **[youtube-dl](https://github.com/ytdl-org/youtube-dl/releases)**).
@@ -68,7 +70,7 @@ If you have a recent downloader version and still get errors, feel free to creat
  
 ## :scroll: License
 ```
-Copyright 2023 Daenges
+Copyright 2025 Daenges
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
