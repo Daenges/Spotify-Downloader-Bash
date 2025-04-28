@@ -246,7 +246,7 @@ crawlerTask() {
         else
             ###
             # Merge cover, metadata and .mp3 file
-            ffmpeg -i "${fileBaseName}.mp3" -i "/${tempDir}/$songTitle.jpg" \
+            ffmpeg -i "${fileBaseName}.mp3" -i "${fileBaseName}.jpg" \
             -map 0:0 -map 1:0 -codec copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" \
             -metadata artist="$artist" \
             -metadata album="$albumName" \
