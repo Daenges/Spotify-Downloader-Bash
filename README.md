@@ -57,16 +57,6 @@ additionalKeywords=""
 If you got any error, **check the version of your downloader against their latest release** (**[yt-dlp](https://github.com/yt-dlp/yt-dlp/releases)** or **[youtube-dl](https://github.com/ytdl-org/youtube-dl/releases)**).
 Most errors arise through Youtube updating their page which needs to be implemented into the downloaders.
 If you have a recent downloader version and still get errors, feel free to create an issue here.
-
-
-## :mag_right: What is the script doing in the background?
-1. Reading all parameters
-2. Getting the column number for the according data fields (`Artist Name`, `Track Name`, ...)
-3. Creating an array containing all lines of data
-4. Starting parallel jobs that handle the download process
-    - download picture and `.mp3` into `/temp/`
-    - merge them with `FFMPEG` while also applying metadata
- 
  
 ## :scroll: License
 ```
