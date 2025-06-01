@@ -196,15 +196,17 @@ crawlerTask() {
     if [[ ! -f "${musicPath}/${songTitle} - ${artist}.mp3" ]]; then
 
         tempDir="$(mktemp -d)"
-        fileBaseName="${tempDir}/${songTitle} - ${artist}" 
+        sanitizedFileName="$(sed 's#[<>:\"/\\|?*]##g' <<< "${songTitle} - ${artist}")"
+        tempFilePath="${tempDir}/${sanitizedFileName}"
+ 
 
         # HTML escape all data
         songURL="https://music.youtube.com/search?q=$(urlencode "$songTitle")+$(urlencode "$artist")+$(urlencode "$additionalKeywords")#Songs"
 
         ###
         # Get cover and .mp3 file
-        curl -s "$image" > "${fileBaseName}.jpg" &
-        $downloader -o "${fileBaseName}.%(ext)s" "$songURL" -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
+        curl -s "$image" > "${tempFilePath}.jpg" &
+        $downloader -o "${tempFilePath}.%(ext)s" "$songURL" -I 1 -x --audio-format mp3 --audio-quality 0 --quiet &
         wait
         ###
 
@@ -215,7 +217,7 @@ crawlerTask() {
                         "${artist}" \
                         "${albumName}" \
                         "${trackDuration}" \
-                        "${fileBaseName}"
+                        "${tempFilePath}"
             
             kid3-cli \
             -c "set title '$songTitle'" \
@@ -227,26 +229,26 @@ crawlerTask() {
             -c "set tracknumber '$trackNumber'" \
             -c "set rating $((popularityScore * 255 / 100))" \
             -c "set isrc '$isrc'" \
-            "${fileBaseName}.mp3"
+            "${tempFilePath}.mp3"
 
             # SYLT Tag implementation is a dumpsterfire...
-            if [[ -f "${fileBaseName}.lrc" ]]; then
-                kid3-cli -c "set SYLT:'${fileBaseName}.lrc' ''" -c "set USLT:'${fileBaseName}.lrc' ''" "${fileBaseName}.mp3"
+            if [[ -f "${tempFilePath}.lrc" ]]; then
+                kid3-cli -c "set SYLT:'${tempFilePath}.lrc' ''" -c "set USLT:'${tempFilePath}.lrc' ''" "${tempFilePath}.mp3"
             fi
 
-            if [[ -f "${fileBaseName}.txt" ]]; then
-                kid3-cli -c "set USLT:'${fileBaseName}.txt' ''" "${fileBaseName}.mp3"
+            if [[ -f "${tempFilePath}.txt" ]]; then
+                kid3-cli -c "set USLT:'${tempFilePath}.txt' ''" "${tempFilePath}.mp3"
             fi
 
-            if [[ -f "${fileBaseName}.jpg" ]]; then
-                kid3-cli -c "set picture:'${fileBaseName}.jpg' '1'" "${fileBaseName}.mp3"
+            if [[ -f "${tempFilePath}.jpg" ]]; then
+                kid3-cli -c "set picture:'${tempFilePath}.jpg' '1'" "${tempFilePath}.mp3"
             fi
 
-            mv "${fileBaseName}.mp3" "${musicPath}/${songTitle} - ${artist}.mp3"
+            mv "${tempFilePath}.mp3" "${musicPath}/${sanitizedFileName}.mp3"
         else
             ###
             # Merge cover, metadata and .mp3 file
-            ffmpeg -i "${fileBaseName}.mp3" -i "${fileBaseName}.jpg" \
+            ffmpeg -i "${tempFilePath}.mp3" -i "${tempFilePath}.jpg" \
             -map 0:0 -map 1:0 -codec copy -id3v2_version 3 -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" \
             -metadata artist="$artist" \
             -metadata album="$albumName" \
@@ -256,7 +258,7 @@ crawlerTask() {
             -metadata track="$trackNumber" \
             -hide_banner \
             -loglevel error \
-            "${musicPath}/${songTitle} - ${artist}.mp3" -y
+            "${musicPath}/${sanitizedFileName}.mp3" -y
             ###
         fi
 
