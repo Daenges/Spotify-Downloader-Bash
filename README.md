@@ -17,7 +17,7 @@ Be aware, that this script is only an **automation** of `yt-dlp` / `youtuble-dl`
 
 ## :clipboard: Script Setup
 
-1. Visit &nbsp;<a href="https://watsonbox.github.io/exportify/"><img style="height: 20px; width: 20px;" src="https://watsonbox.github.io/exportify/favicon.png"> <b>Exportify</b></a>, **sign in with your Spotify credentials** and **export** your desired playlists as a `.csv` file.
+1. Visit &nbsp;<a href="https://watsonbox.github.io/exportify/"><img style="height: 20px; width: 20px;" src="https://watsonbox.github.io/exportify/favicon.png"> <b>Exportify</b></a>, **sign in with your Spotify credentials**, turn your **language to English** and **export** your desired playlists as a `.csv` file.
 2. Install a **downloader** (`yt-dlp` or `youtube-dl` &rarr; **Check for a recent version!** ) and `FFMPEG` with your prefered package manager. Further tools required that **might not be installed**: `curl`, `mktemp`.
 3. **Optional:** Also install `jq` and `kid3-cli` to imbed lyrics.
 4. **Get the script** and **make it executable**:
